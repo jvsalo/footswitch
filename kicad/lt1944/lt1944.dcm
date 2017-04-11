@@ -1,0 +1,8 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP LT1944
+D Regulator +5V CMS
+K Step-Up Converter
+$ENDCMP
+#
+#End Doc Library

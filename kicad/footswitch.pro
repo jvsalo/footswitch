@@ -1,4 +1,4 @@
-update=ti 11. huhtikuuta 2017 23.27.04
+update=ke 12. huhtikuuta 2017 01.28.53
 version=1
 last_client=kicad
 [pcbnew]
@@ -69,3 +69,4 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=nRF24L01+/nrf24l01+
+LibName31=lt1944/lt1944
