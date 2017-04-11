@@ -1,0 +1,770 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:nrf24l01+
+LIBS:footswitch-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "MIDI footswitch"
+Date "2017-04-12"
+Rev "1.0"
+Comp "Jaakko Salo / jaakkos@gmail.com"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L ATMEGA328P-A IC?
+U 1 1 58EBB3D2
+P 2475 2675
+F 0 "IC?" H 1725 3925 50  0000 L BNN
+F 1 "ATMEGA328P-A" H 2875 1275 50  0000 L BNN
+F 2 "TQFP32" H 2475 2675 50  0000 C CIN
+F 3 "" H 2475 2675 50  0000 C CNN
+	1    2475 2675
+	1    0    0    -1  
+$EndComp
+Text GLabel 1350 1350 1    39   Input ~ 0
+3V3
+$Comp
+L Earth #PWR?
+U 1 1 58EBB46B
+P 1350 4050
+F 0 "#PWR?" H 1350 3800 50  0001 C CNN
+F 1 "Earth" H 1350 3900 50  0001 C CNN
+F 2 "" H 1350 4050 50  0000 C CNN
+F 3 "" H 1350 4050 50  0000 C CNN
+	1    1350 4050
+	1    0    0    -1  
+$EndComp
+$Comp
+L DC04-11 AFF?
+U 1 1 58EBB770
+P 9450 4475
+F 0 "AFF?" H 9450 4975 50  0000 C CNN
+F 1 "DC04-11" H 9450 4025 50  0000 C CNN
+F 2 "" H 9450 4475 50  0000 C CNN
+F 3 "" H 9450 4475 50  0000 C CNN
+	1    9450 4475
+	1    0    0    -1  
+$EndComp
+$Comp
+L BSS138 Q?
+U 1 1 58EBBDC9
+P 7725 4425
+F 0 "Q?" H 7575 4575 50  0000 L CNN
+F 1 "BSS214NWH6327XTSA1" V 7950 3825 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23" H 7925 4350 50  0001 L CIN
+F 3 "" H 7725 4425 50  0000 L CNN
+	1    7725 4425
+	1    0    0    -1  
+$EndComp
+$Comp
+L BSS138 Q?
+U 1 1 58EBBE8D
+P 7025 4425
+F 0 "Q?" H 6900 4600 50  0000 L CNN
+F 1 "BSS214NWH6327XTSA1" V 7250 3825 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23" H 7225 4350 50  0001 L CIN
+F 3 "" H 7025 4425 50  0000 L CNN
+	1    7025 4425
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 58EBC7CA
+P 7825 4625
+F 0 "#PWR?" H 7825 4375 50  0001 C CNN
+F 1 "Earth" H 7825 4475 50  0001 C CNN
+F 2 "" H 7825 4625 50  0000 C CNN
+F 3 "" H 7825 4625 50  0000 C CNN
+	1    7825 4625
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 58EBC7E8
+P 7125 4625
+F 0 "#PWR?" H 7125 4375 50  0001 C CNN
+F 1 "Earth" H 7125 4475 50  0001 C CNN
+F 2 "" H 7125 4625 50  0000 C CNN
+F 3 "" H 7125 4625 50  0000 C CNN
+	1    7125 4625
+	1    0    0    -1  
+$EndComp
+Text GLabel 7525 4475 0    40   Input ~ 0
+GPX
+Text GLabel 6825 4475 0    40   Input ~ 0
+GPX
+Text GLabel 8150 6000 3    40   Input ~ 0
+GPX
+$Comp
+L R_Small R?
+U 1 1 58EBCC7E
+P 8150 5900
+F 0 "R?" V 8150 5875 24  0000 L CNN
+F 1 "R_Small" V 8125 5975 24  0000 L CNN
+F 2 "" H 8150 5900 50  0000 C CNN
+F 3 "" H 8150 5900 50  0000 C CNN
+	1    8150 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L R_Small R?
+U 1 1 58EBCDE7
+P 8225 5900
+F 0 "R?" V 8225 5875 24  0000 L CNN
+F 1 "R_Small" V 8200 5975 24  0000 L CNN
+F 2 "" H 8225 5900 50  0000 C CNN
+F 3 "" H 8225 5900 50  0000 C CNN
+	1    8225 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L R_Small R?
+U 1 1 58EBCE0F
+P 8300 5900
+F 0 "R?" V 8300 5875 24  0000 L CNN
+F 1 "R_Small" V 8275 5975 24  0000 L CNN
+F 2 "" H 8300 5900 50  0000 C CNN
+F 3 "" H 8300 5900 50  0000 C CNN
+	1    8300 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L R_Small R?
+U 1 1 58EBCE36
+P 8375 5900
+F 0 "R?" V 8375 5875 24  0000 L CNN
+F 1 "R_Small" V 8350 5975 24  0000 L CNN
+F 2 "" H 8375 5900 50  0000 C CNN
+F 3 "" H 8375 5900 50  0000 C CNN
+	1    8375 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L R_Small R?
+U 1 1 58EBCE66
+P 8450 5900
+F 0 "R?" V 8450 5875 24  0000 L CNN
+F 1 "R_Small" V 8425 5975 24  0000 L CNN
+F 2 "" H 8450 5900 50  0000 C CNN
+F 3 "" H 8450 5900 50  0000 C CNN
+	1    8450 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L R_Small R?
+U 1 1 58EBCE93
+P 8525 5900
+F 0 "R?" V 8525 5875 24  0000 L CNN
+F 1 "R_Small" V 8500 5975 24  0000 L CNN
+F 2 "" H 8525 5900 50  0000 C CNN
+F 3 "" H 8525 5900 50  0000 C CNN
+	1    8525 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L R_Small R?
+U 1 1 58EBCFC3
+P 8600 5900
+F 0 "R?" V 8600 5875 24  0000 L CNN
+F 1 "R_Small" V 8575 5975 24  0000 L CNN
+F 2 "" H 8600 5900 50  0000 C CNN
+F 3 "" H 8600 5900 50  0000 C CNN
+	1    8600 5900
+	1    0    0    -1  
+$EndComp
+Text GLabel 8225 6000 3    40   Input ~ 0
+GPX
+Text GLabel 8300 6000 3    40   Input ~ 0
+GPX
+Text GLabel 8375 6000 3    40   Input ~ 0
+GPX
+Text GLabel 8450 6000 3    40   Input ~ 0
+GPX
+Text GLabel 8525 6000 3    40   Input ~ 0
+GPX
+Text GLabel 8600 6000 3    40   Input ~ 0
+GPX
+Text GLabel 3900 2075 2    40   Input ~ 0
+SCK
+Text GLabel 3900 1875 2    40   Output ~ 0
+MOSI
+Text GLabel 3900 1975 2    40   Input ~ 0
+MISO
+Text GLabel 3925 3175 2    40   Input ~ 0
+RXD
+Text GLabel 3925 3275 2    40   Output ~ 0
+TXD
+$Comp
+L C_Small C?
+U 1 1 58EC20DD
+P 1450 2350
+F 0 "C?" V 1575 2300 50  0000 L CNN
+F 1 "100nF" V 1325 2250 50  0000 L CNN
+F 2 "" H 1450 2350 50  0000 C CNN
+F 3 "" H 1450 2350 50  0000 C CNN
+	1    1450 2350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 58EC234C
+P 1450 2450
+F 0 "#PWR?" H 1450 2200 50  0001 C CNN
+F 1 "Earth" H 1450 2300 50  0001 C CNN
+F 2 "" H 1450 2450 50  0000 C CNN
+F 3 "" H 1450 2450 50  0000 C CNN
+	1    1450 2450
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 P?
+U 1 1 58EC2CAD
+P 10175 1425
+F 0 "P?" H 10175 1775 50  0000 C CNN
+F 1 "Programming header" V 10275 1425 50  0000 C CNN
+F 2 "" H 10175 1425 50  0000 C CNN
+F 3 "" H 10175 1425 50  0000 C CNN
+	1    10175 1425
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 58EC2D79
+P 9975 1175
+F 0 "#PWR?" H 9975 925 50  0001 C CNN
+F 1 "Earth" H 9975 1025 50  0001 C CNN
+F 2 "" H 9975 1175 50  0000 C CNN
+F 3 "" H 9975 1175 50  0000 C CNN
+	1    9975 1175
+	0    1    1    0   
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 58EC2E45
+P 9975 1275
+F 0 "#PWR?" H 9975 1025 50  0001 C CNN
+F 1 "Earth" H 9975 1125 50  0001 C CNN
+F 2 "" H 9975 1275 50  0000 C CNN
+F 3 "" H 9975 1275 50  0000 C CNN
+	1    9975 1275
+	0    1    1    0   
+$EndComp
+Text GLabel 9975 1375 0    40   Output ~ 0
+3V3
+Text GLabel 9975 1475 0    40   Output ~ 0
+RX
+Text GLabel 9975 1575 0    40   Input ~ 0
+TX
+Text GLabel 9975 1675 0    40   Output ~ 0
+DTR
+$Comp
+L nRF24L01+ U?
+U 1 1 58ED73BF
+P 6475 2150
+F 0 "U?" H 6475 1850 50  0001 C CNN
+F 1 "nRF24L01+" H 6475 2450 50  0000 C CNN
+F 2 "MODULE" H 6475 2250 50  0001 C CNN
+F 3 "DOCUMENTATION" H 6475 2100 50  0001 C CNN
+	1    6475 2150
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 58ED7961
+P 4975 2175
+F 0 "#PWR?" H 4975 1925 50  0001 C CNN
+F 1 "Earth" H 4975 2025 50  0001 C CNN
+F 2 "" H 4975 2175 50  0000 C CNN
+F 3 "" H 4975 2175 50  0000 C CNN
+	1    4975 2175
+	1    0    0    -1  
+$EndComp
+Text GLabel 5600 1225 1    40   Input ~ 0
+VCC
+$Comp
+L C_Small C?
+U 1 1 58ED7C7A
+P 5300 1675
+F 0 "C?" H 5310 1745 50  0000 L CNN
+F 1 "10uF" H 5310 1595 50  0000 L CNN
+F 2 "" H 5300 1675 50  0000 C CNN
+F 3 "" H 5300 1675 50  0000 C CNN
+	1    5300 1675
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C?
+U 1 1 58ED7CF5
+P 4975 1675
+F 0 "C?" H 4985 1745 50  0000 L CNN
+F 1 "100nF" H 4985 1595 50  0000 L CNN
+F 2 "" H 4975 1675 50  0000 C CNN
+F 3 "" H 4975 1675 50  0000 C CNN
+	1    4975 1675
+	1    0    0    -1  
+$EndComp
+Text GLabel 7225 1950 2    40   Input ~ 0
+SCK
+Text GLabel 7225 2100 2    40   Input ~ 0
+MOSI
+Text GLabel 7225 2250 2    40   Output ~ 0
+MISO
+NoConn ~ 7225 2400
+Text GLabel 5725 2250 0    40   Input ~ 0
+NRF_CE
+Text GLabel 5725 2400 0    40   Input ~ 0
+NRF_CSN
+$Comp
+L CONN_01X08 P?
+U 1 1 58EDCA87
+P 9600 1525
+F 0 "P?" H 9600 1975 50  0000 C CNN
+F 1 "Atmega top" V 9700 1525 50  0000 C CNN
+F 2 "" H 9600 1525 50  0000 C CNN
+F 3 "" H 9600 1525 50  0000 C CNN
+	1    9600 1525
+	1    0    0    -1  
+$EndComp
+Text GLabel 9400 1175 0    40   UnSpc ~ 0
+PD2
+Text GLabel 9400 1275 0    40   UnSpc ~ 0
+PD1
+Text GLabel 9400 1375 0    40   UnSpc ~ 0
+PD0
+Text GLabel 9400 1475 0    40   UnSpc ~ 0
+PC6
+Text GLabel 9400 1575 0    40   UnSpc ~ 0
+PC5
+Text GLabel 9400 1675 0    40   UnSpc ~ 0
+PC4
+Text GLabel 9400 1775 0    40   UnSpc ~ 0
+PC3
+Text GLabel 9400 1875 0    40   UnSpc ~ 0
+PC2
+$Comp
+L CONN_01X08 P?
+U 1 1 58EDD361
+P 8975 1525
+F 0 "P?" H 8975 1975 50  0000 C CNN
+F 1 "Atmega left" V 9075 1525 50  0000 C CNN
+F 2 "" H 8975 1525 50  0000 C CNN
+F 3 "" H 8975 1525 50  0000 C CNN
+	1    8975 1525
+	1    0    0    -1  
+$EndComp
+Text GLabel 8775 1175 0    40   UnSpc ~ 0
+PC1
+Text GLabel 8775 1275 0    40   UnSpc ~ 0
+PC0
+Text GLabel 8775 1375 0    40   UnSpc ~ 0
+ADC7
+$Comp
+L Earth #PWR?
+U 1 1 58EDD62C
+P 8775 1475
+F 0 "#PWR?" H 8775 1225 50  0001 C CNN
+F 1 "Earth" H 8775 1325 50  0001 C CNN
+F 2 "" H 8775 1475 50  0000 C CNN
+F 3 "" H 8775 1475 50  0000 C CNN
+	1    8775 1475
+	0    1    1    0   
+$EndComp
+Text GLabel 8775 1575 0    40   UnSpc ~ 0
+AREF
+Text GLabel 8775 1675 0    40   UnSpc ~ 0
+ADC6
+Text GLabel 8775 1775 0    40   UnSpc ~ 0
+AVCC
+Text GLabel 8775 1875 0    40   UnSpc ~ 0
+PB5
+$Comp
+L CONN_01X08 P?
+U 1 1 58EDD9D5
+P 8975 2500
+F 0 "P?" H 8975 2950 50  0000 C CNN
+F 1 "Atmega bottom" V 9075 2500 50  0000 C CNN
+F 2 "" H 8975 2500 50  0000 C CNN
+F 3 "" H 8975 2500 50  0000 C CNN
+	1    8975 2500
+	1    0    0    -1  
+$EndComp
+Text GLabel 8775 2150 0    40   UnSpc ~ 0
+PD5
+Text GLabel 8775 2250 0    40   UnSpc ~ 0
+PD6
+Text GLabel 8775 2350 0    40   UnSpc ~ 0
+PD7
+Text GLabel 8775 2450 0    40   UnSpc ~ 0
+PB0
+Text GLabel 8775 2550 0    40   UnSpc ~ 0
+PB1
+Text GLabel 8775 2650 0    40   UnSpc ~ 0
+PB2
+Text GLabel 8775 2750 0    40   UnSpc ~ 0
+PB3
+Text GLabel 8775 2850 0    40   UnSpc ~ 0
+PB4
+$Comp
+L CONN_01X08 P?
+U 1 1 58EDEA17
+P 9600 2500
+F 0 "P?" H 9600 2950 50  0000 C CNN
+F 1 "Atmega left" V 9700 2500 50  0000 C CNN
+F 2 "" H 9600 2500 50  0000 C CNN
+F 3 "" H 9600 2500 50  0000 C CNN
+	1    9600 2500
+	1    0    0    -1  
+$EndComp
+Text GLabel 9400 2150 0    40   UnSpc ~ 0
+PD3
+Text GLabel 9400 2250 0    40   UnSpc ~ 0
+PD4
+$Comp
+L Earth #PWR?
+U 1 1 58EDECB8
+P 9400 2350
+F 0 "#PWR?" H 9400 2100 50  0001 C CNN
+F 1 "Earth" H 9400 2200 50  0001 C CNN
+F 2 "" H 9400 2350 50  0000 C CNN
+F 3 "" H 9400 2350 50  0000 C CNN
+	1    9400 2350
+	0    1    1    0   
+$EndComp
+Text GLabel 9400 2450 0    39   UnSpc ~ 0
+3V3
+$Comp
+L Earth #PWR?
+U 1 1 58EDEF3B
+P 9400 2550
+F 0 "#PWR?" H 9400 2300 50  0001 C CNN
+F 1 "Earth" H 9400 2400 50  0001 C CNN
+F 2 "" H 9400 2550 50  0000 C CNN
+F 3 "" H 9400 2550 50  0000 C CNN
+	1    9400 2550
+	0    1    1    0   
+$EndComp
+Text GLabel 9400 2650 0    39   UnSpc ~ 0
+3V3
+Text GLabel 9400 2750 0    40   UnSpc ~ 0
+PB6
+Text GLabel 9400 2850 0    40   UnSpc ~ 0
+PB7
+Text GLabel 3475 1575 2    40   UnSpc ~ 0
+PB0
+Text GLabel 3475 1675 2    40   UnSpc ~ 0
+PB1
+Text GLabel 3575 1775 2    40   UnSpc ~ 0
+PB2
+Text GLabel 3475 2175 2    40   UnSpc ~ 0
+PB6
+Text GLabel 3475 2275 2    40   UnSpc ~ 0
+PB7
+Text GLabel 3475 2425 2    40   UnSpc ~ 0
+PC0
+Text GLabel 3475 2525 2    40   UnSpc ~ 0
+PC1
+Text GLabel 3475 2625 2    40   UnSpc ~ 0
+PC2
+Text GLabel 3475 3375 2    40   UnSpc ~ 0
+PD2
+Text GLabel 3475 3475 2    40   UnSpc ~ 0
+PD3
+Text GLabel 3475 3575 2    40   UnSpc ~ 0
+PD4
+Text GLabel 3475 3675 2    40   UnSpc ~ 0
+PD5
+Text GLabel 3475 3775 2    40   UnSpc ~ 0
+PD6
+Text GLabel 3475 3875 2    40   UnSpc ~ 0
+PD7
+Text GLabel 3475 2725 2    40   UnSpc ~ 0
+PC3
+Text GLabel 3475 2825 2    40   UnSpc ~ 0
+PC4
+Text GLabel 3475 2925 2    40   UnSpc ~ 0
+PC5
+Text GLabel 3475 3025 2    40   UnSpc ~ 0
+PC6
+Text GLabel 3575 2075 2    40   UnSpc ~ 0
+PB5
+Text GLabel 3575 1975 2    40   UnSpc ~ 0
+PB4
+Text GLabel 3575 1875 2    40   UnSpc ~ 0
+PB3
+Wire Wire Line
+	1575 3675 1350 3675
+Wire Wire Line
+	1575 3775 1350 3775
+Wire Wire Line
+	1350 3875 1575 3875
+Wire Wire Line
+	1350 3675 1350 3775
+Wire Wire Line
+	1350 3775 1350 3875
+Wire Wire Line
+	1350 3875 1350 4050
+Connection ~ 1350 3775
+Connection ~ 1350 3875
+Wire Wire Line
+	1350 1675 1575 1675
+Wire Wire Line
+	1350 1350 1350 1575
+Wire Wire Line
+	1350 1575 1350 1675
+Wire Wire Line
+	1350 1675 1350 1875
+Wire Wire Line
+	1350 1575 1575 1575
+Connection ~ 1350 1575
+Wire Wire Line
+	8600 4075 7825 4075
+Wire Wire Line
+	7825 4075 7825 4225
+Wire Wire Line
+	8600 4775 8600 5125
+Wire Wire Line
+	8600 5125 8600 5800
+Wire Wire Line
+	8600 4675 8525 4675
+Wire Wire Line
+	8525 4675 8525 5200
+Wire Wire Line
+	8525 5200 8525 5800
+Wire Wire Line
+	8600 4575 8450 4575
+Wire Wire Line
+	8450 4575 8450 5275
+Wire Wire Line
+	8450 5275 8450 5800
+Wire Wire Line
+	8600 4475 8375 4475
+Wire Wire Line
+	8375 4475 8375 5350
+Wire Wire Line
+	8375 5350 8375 5800
+Wire Wire Line
+	8600 4375 8300 4375
+Wire Wire Line
+	8300 4375 8300 5425
+Wire Wire Line
+	8300 5425 8300 5800
+Wire Wire Line
+	8600 4275 8225 4275
+Wire Wire Line
+	8225 4275 8225 5500
+Wire Wire Line
+	8225 5500 8225 5800
+Wire Wire Line
+	8600 4175 8150 4175
+Wire Wire Line
+	8150 4175 8150 5575
+Wire Wire Line
+	8150 5575 8150 5800
+Wire Wire Line
+	10300 4775 10300 5125
+Wire Wire Line
+	10300 4675 10375 4675
+Wire Wire Line
+	10375 4675 10375 5200
+Wire Wire Line
+	10300 4575 10450 4575
+Wire Wire Line
+	10450 4575 10450 5275
+Wire Wire Line
+	10300 4475 10525 4475
+Wire Wire Line
+	10525 4475 10525 5350
+Wire Wire Line
+	10300 4375 10600 4375
+Wire Wire Line
+	10600 4375 10600 5425
+Wire Wire Line
+	10300 4275 10675 4275
+Wire Wire Line
+	10675 4275 10675 5500
+Wire Wire Line
+	10300 4175 10750 4175
+Wire Wire Line
+	10750 4175 10750 5575
+Wire Wire Line
+	10300 5125 8600 5125
+Wire Wire Line
+	10375 5200 8525 5200
+Connection ~ 8525 5200
+Wire Wire Line
+	10450 5275 8450 5275
+Connection ~ 8450 5275
+Wire Wire Line
+	10525 5350 8375 5350
+Connection ~ 8375 5350
+Wire Wire Line
+	10600 5425 8300 5425
+Connection ~ 8300 5425
+Wire Wire Line
+	10675 5500 8225 5500
+Connection ~ 8225 5500
+Wire Wire Line
+	10750 5575 8150 5575
+Connection ~ 8150 5575
+Wire Wire Line
+	10300 4075 10300 3850
+Wire Wire Line
+	10300 3850 7125 3850
+Wire Wire Line
+	7125 3850 7125 4225
+Connection ~ 8600 5125
+Wire Wire Line
+	1225 1875 1350 1875
+Wire Wire Line
+	1350 1875 1575 1875
+Connection ~ 1350 1675
+Wire Wire Line
+	1225 2175 1450 2175
+Wire Wire Line
+	1450 2175 1575 2175
+Wire Wire Line
+	4975 1950 5300 1950
+Wire Wire Line
+	5300 1950 5725 1950
+Wire Wire Line
+	5600 2100 5725 2100
+Wire Wire Line
+	5600 1225 5600 1450
+Wire Wire Line
+	5600 1450 5600 2100
+Wire Wire Line
+	4975 1450 5300 1450
+Wire Wire Line
+	5300 1450 5600 1450
+Wire Wire Line
+	5300 1450 5300 1575
+Connection ~ 5600 1450
+Wire Wire Line
+	4975 1450 4975 1575
+Connection ~ 5300 1450
+Wire Wire Line
+	4975 1775 4975 1950
+Wire Wire Line
+	4975 1950 4975 2175
+Connection ~ 4975 1950
+Wire Wire Line
+	5300 1775 5300 1950
+Connection ~ 5300 1950
+Wire Wire Line
+	3475 2075 3475 2125
+Wire Wire Line
+	3475 2125 3800 2125
+Wire Wire Line
+	3800 2125 3800 2075
+Wire Wire Line
+	3800 2075 3900 2075
+Wire Wire Line
+	3900 1975 3800 1975
+Wire Wire Line
+	3800 1975 3800 2025
+Wire Wire Line
+	3800 2025 3475 2025
+Wire Wire Line
+	3475 2025 3475 1975
+Wire Wire Line
+	3900 1875 3800 1875
+Wire Wire Line
+	3800 1875 3800 1925
+Wire Wire Line
+	3800 1925 3475 1925
+Wire Wire Line
+	3475 1925 3475 1875
+Wire Wire Line
+	3475 1875 3575 1875
+Wire Wire Line
+	3475 1975 3575 1975
+Wire Wire Line
+	3575 2075 3475 2075
+Connection ~ 3475 2075
+Connection ~ 3475 1975
+Connection ~ 3475 1875
+Text GLabel 3575 3175 2    40   UnSpc ~ 0
+PD0
+Wire Wire Line
+	3475 3175 3475 3225
+Wire Wire Line
+	3475 3225 3800 3225
+Wire Wire Line
+	3800 3225 3800 3175
+Wire Wire Line
+	3800 3175 3925 3175
+Wire Wire Line
+	3475 3175 3575 3175
+Connection ~ 3475 3175
+Text GLabel 3575 3275 2    40   UnSpc ~ 0
+PD1
+Wire Wire Line
+	3475 3275 3575 3275
+Connection ~ 3475 3275
+Wire Wire Line
+	3475 3275 3475 3325
+Wire Wire Line
+	3475 3325 3800 3325
+Wire Wire Line
+	3800 3325 3800 3275
+Wire Wire Line
+	3800 3275 3925 3275
+Text GLabel 1575 2925 0    40   UnSpc ~ 0
+ADC6
+Text GLabel 1575 3025 0    40   UnSpc ~ 0
+ADC7
+Wire Wire Line
+	1450 2175 1450 2250
+Connection ~ 1450 2175
+Text GLabel 1225 2175 0    40   UnSpc ~ 0
+AREF
+Text GLabel 1225 1875 0    40   UnSpc ~ 0
+AVCC
+Connection ~ 1350 1875
+Text GLabel 3900 1775 2    40   Output ~ 0
+NRF_CSN
+Wire Wire Line
+	3475 1775 3575 1775
+Wire Wire Line
+	3475 1775 3475 1825
+Wire Wire Line
+	3475 1825 3800 1825
+Wire Wire Line
+	3800 1825 3800 1775
+Wire Wire Line
+	3800 1775 3900 1775
+$EndSCHEMATC
