@@ -1,4 +1,4 @@
-update=ke 12. huhtikuuta 2017 01.28.53
+update=to 13. huhtikuuta 2017 07.32.00
 version=1
 last_client=kicad
 [pcbnew]
@@ -70,3 +70,6 @@ LibName28=contrib
 LibName29=valves
 LibName30=nRF24L01+/nrf24l01+
 LibName31=lt1944/lt1944
+LibName32=switches
+LibName33=74xgxx
+LibName34=CD4072BM96/cd4072bm96
