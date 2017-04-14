@@ -1,0 +1,3 @@
+[submodule "kicad/mysensors_radios.pretty"]
+	path = kicad/mysensors_radios.pretty
+	url = https://github.com/mysensors-kicad/mysensors_radios.pretty
