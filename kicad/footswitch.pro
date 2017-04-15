@@ -1,4 +1,4 @@
-update=to 13. huhtikuuta 2017 07.32.00
+update=15.4.2017 15:10:56
 version=1
 last_client=kicad
 [pcbnew]
@@ -73,3 +73,4 @@ LibName31=lt1944/lt1944
 LibName32=switches
 LibName33=74xgxx
 LibName34=CD4072BM96/cd4072bm96
+LibName35=7-segment-display/ldd-c514ri
