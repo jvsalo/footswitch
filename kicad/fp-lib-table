@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name switches)(type KiCad)(uri "$(KIPRJMOD)/switches.pretty")(options "")(descr ""))
+  (lib (name BC2AAPC)(type KiCad)(uri "$(KIPRJMOD)/BC2AAPC.pretty")(options "")(descr ""))
+  (lib (name mysensors_radios)(type KiCad)(uri "$(KIPRJMOD)/mysensors_radios.pretty")(options "")(descr ""))
+)
