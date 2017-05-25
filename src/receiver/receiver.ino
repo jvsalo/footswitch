@@ -26,11 +26,12 @@
 #include <util/crc16.h>
 #include <SoftwareSerial.h>
 #include "RF24.h"
+#include "printf.h"
 
 #define FOOTSW_RECEIVER_VER "1.0"
 
-/* Radio driver. CE on pin A7, CSN on A6 */
-RF24 nrf24(A7, A6);
+/* Radio driver. CE on pin A4, CSN on A5 */
+RF24 nrf24(A4, A5);
 
 /* Radio settings */
 const uint64_t nrf24_receiver_txpipe   = 0x5a469bb4460f8939;
@@ -75,7 +76,8 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  Serial.begin(34800);
+  Serial.begin(38400);
+  printf_begin();
   midi_port.begin(31250);
 
   delay(1000);
