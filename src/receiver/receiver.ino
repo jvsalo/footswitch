@@ -61,9 +61,9 @@ void halt(const char *msg) {
 }
 
 bool check_crc(const uint8_t *packet) {
-	uint16_t crc = 0x00;
+  uint16_t crc = 0x00;
 
-	for (size_t i=0; i < (NRF24_PAYLOAD_SZ - CRC_LEN); i++)
+  for (size_t i=0; i < (NRF24_PAYLOAD_SZ - CRC_LEN); i++)
     crc = _crc16_update(crc, packet[i]);
 
   if (memcmp(&crc, packet + (NRF24_PAYLOAD_SZ - CRC_LEN), CRC_LEN))
@@ -79,8 +79,6 @@ void setup() {
   Serial.begin(38400);
   printf_begin();
   midi_port.begin(31250);
-
-  delay(1000);
 
   Serial.println("Footswitch receiver version " FOOTSW_RECEIVER_VER);
   Serial.println("Jaakko Salo / jaakkos@gmail.com / 2017");
