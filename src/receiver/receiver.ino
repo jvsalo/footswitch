@@ -60,18 +60,6 @@ void halt(const char *msg) {
   }
 }
 
-bool check_crc(const uint8_t *packet) {
-  uint16_t crc = 0x00;
-
-  for (size_t i=0; i < (NRF24_PAYLOAD_SZ - CRC_LEN); i++)
-    crc = _crc16_update(crc, packet[i]);
-
-  if (memcmp(&crc, packet + (NRF24_PAYLOAD_SZ - CRC_LEN), CRC_LEN))
-    return false; /* Mismatch */
-
-  return true;
-}
-
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
@@ -85,7 +73,9 @@ void setup() {
 
   Serial.println("Initializing radio module...");
   if (!nrf24.begin()) halt("Unable to initialize radio module");
+
   nrf24.setChannel(NRF24_CHANNEL);
+  nrf24.setDataRate(NRF24_RATE);
   nrf24.setAutoAck(1);
   nrf24.setPayloadSize(NRF24_PAYLOAD_SZ);
   nrf24.openWritingPipe(nrf24_receiver_txpipe);
@@ -107,17 +97,29 @@ void setup() {
 void parse_payload(const uint8_t *payload) {
   uint8_t msg_len = payload[0];
 
-  if (msg_len > (NRF24_PAYLOAD_SZ - CRC_LEN)) {
+  if (msg_len > (NRF24_PAYLOAD_SZ - CRC_LEN - 1)) {
     Serial.println("Received packet: invalid message lenth");
     return;
   }
 
-  midi_port.write(payload, msg_len);
+  midi_port.write(payload+1, msg_len);
 
-  Serial.print("Received and sent: ");
+  printf("Received and sent: ");
   for (size_t i = 0; i < msg_len; i++)
-    Serial.print(payload[i], HEX);
-  Serial.write('\n');
+    printf("%02x", payload[i+1]);
+  printf("\n");
+}
+
+bool check_crc(const uint8_t *packet) {
+  uint16_t crc = 0x00;
+
+  for (size_t i=0; i < (NRF24_PAYLOAD_SZ - CRC_LEN); i++)
+    crc = _crc16_update(crc, packet[i]);
+
+  if (memcmp(&crc, packet + (NRF24_PAYLOAD_SZ - CRC_LEN), CRC_LEN))
+    return false; /* Mismatch */
+
+  return true;
 }
 
 bool led_blink = false;
