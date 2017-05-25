@@ -44,8 +44,12 @@ const uint64_t nrf24_footswitch_txpipe = 0x0731e80038efeede;
 #define RX_BLINK_MILLIS     100
 #define CRC_LEN             2
 
-/* MIDI transmitter. RX (unused) on pin 4, TX on pin 2 */
-SoftwareSerial midi_port(4, 2);
+/*
+ * MIDI transmitter. RX (unused) on pin 4, TX on pin 2.
+ * Use inverse logic because we are driving the optocoupler
+ * through an NPN transistor.
+ */
+SoftwareSerial midi_port(4, 2, true);
 
 /* Indicator LED */
 #define LED_PIN 3
