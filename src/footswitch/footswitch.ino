@@ -46,11 +46,30 @@ const uint64_t nrf24_footswitch_txpipe = 0x0731e80038efeede;
 /* LED segment pins */
 const char led_segments[] = {A1, A2, A3, A4, A5, 6, 7};
 
+/*
+ * Array index to segment mapping:
+ *
+ *   +---1---+
+ *   |       |
+ *   6       2
+ *   |       |
+ *   +---7---+
+ *   |       |
+ *   5       3
+ *   |       |
+ *   +---4---+
+ *
+ */
+
 /* LED display buffer for multiplex driver, one bit per segment. */
 volatile uint8_t led_buffer[2] = {0};
 
+/* Numbers from 0 to 9 */
+const char led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,
+                            0xFF, 0xEF};
+
 /* LED multiplex digit select pins (FET driver) */
-const char led_mplex_pins[] = {9, 10};
+const char led_mplex_pins[] = {10, 9};
 
 /* Footswitch button pins */
 #define FOOTSW_BUTTON_1 4
@@ -169,6 +188,7 @@ void setup() {
  *  | Payload len |      Payload + padding        |      CRC16     |
  *  +-------------+-------------------------------+----------------+
  *       1 byte       NRF24_PAYLOAD_SZ - 3 bytes         2 bytes
+ *
  */
 bool sendmsg(const char *msg, size_t sz) {
   char msg_out[NRF24_PAYLOAD_SZ] = {0};
@@ -197,10 +217,10 @@ void loop() {
   const char msg3[] = "\xB0\x1f\x41";
   const char msg4[] = "\xB0\x1f\x61";
 
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = 0; i < 100; i++) {
     noInterrupts();
-    led_buffer[0] = 1 << i;
-    led_buffer[1] = 1 << i;
+    led_buffer[0] = led_numbers[i/10];
+    led_buffer[1] = led_numbers[i%10];
     interrupts();
     delay(100);
   }
