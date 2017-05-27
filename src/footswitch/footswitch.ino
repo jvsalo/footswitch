@@ -78,8 +78,9 @@ const char led_mplex_pins[] = {10, 9};
 /* Potentiometer setup */
 #define FOOTSW_POT_SW 8
 #define FOOTSW_POT_ADC A7
-#define FOOTSW_POT_LOWPASS_ALPHA 0.99
+#define FOOTSW_POT_LOWPASS_ALPHA 0.98
 #define FOOTSW_POT_DEADZONE 2
+#define FOOTSW_POT_MIN_CHANGE 0.2
 
 /* Button state. Bits raised from the interrupt handler */
 volatile uint8_t button_state = 0x00;
@@ -256,6 +257,7 @@ void btn2_pressed() {
 
 void read_potentiometer() {
   static float filtered = 0.0;
+  static float filtered_noflap = 0.0;
 
   int ain = analogRead(FOOTSW_POT_ADC);
 
@@ -266,8 +268,12 @@ void read_potentiometer() {
   filtered = FOOTSW_POT_LOWPASS_ALPHA * filtered +
              (1.0 - FOOTSW_POT_LOWPASS_ALPHA) * new_val;
 
+  /* Prevent flapping by requiring minimum change */
+  if (fabs(filtered - filtered_noflap) > FOOTSW_POT_MIN_CHANGE)
+    filtered_noflap = filtered;
+
   /* Add some dead zone */
-  int val = map(filtered, 0, 100, -FOOTSW_POT_DEADZONE,
+  int val = map(filtered_noflap, 0, 100, -FOOTSW_POT_DEADZONE,
                 100 + FOOTSW_POT_DEADZONE);
   if (val < 0) val = 0;
   else if (val > 99) val = 99;
