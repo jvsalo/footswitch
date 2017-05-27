@@ -24,7 +24,7 @@
 
 #include <SPI.h>
 #include <util/crc16.h>
-#include <SoftwareSerial.h>
+#include <avr/sleep.h>
 #include "RF24.h"
 #include "printf.h"
 
@@ -65,8 +65,8 @@ const char led_segments[] = {A1, A2, A3, A4, A5, 6, 7};
 volatile uint8_t led_buffer[2] = {0};
 
 /* Numbers from 0 to 9 */
-const char led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,
-                            0xFF, 0xEF};
+const uint8_t led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,
+                               0xFF, 0xEF};
 
 /* LED multiplex digit select pins (FET driver) */
 const char led_mplex_pins[] = {10, 9};
@@ -132,11 +132,21 @@ void display_setup() {
   TCCR1A = 0;               /* Zero TC1 control registers */
   TCCR1B = 0;
   TCNT1  = 0;               /* Initialize counter value */
-  OCR1A = 16000;            /* At 8MHz, yields 2000 Hz */
+  OCR1A = 16000;            /* At 8MHz, yields 500 Hz */
   TCCR1B |= (1 << WGM12);   /* Clear Timer on Compare match (CTC) mode */
   TCCR1B |= (1 << CS10);    /* No prescaler */
   TIMSK1 |= (1 << OCIE1A);  /* Enable compare match interrupt */
   interrupts();
+}
+
+ISR(PCINT2_vect) {
+  if (digitalRead(FOOTSW_BUTTON_1))
+    led_buffer[0] = led_numbers[1];
+
+  else if(digitalRead(FOOTSW_BUTTON_2))
+    led_buffer[0] = led_numbers[2];
+
+  else led_buffer[0] = led_numbers[0];
 }
 
 void input_setup() {
@@ -144,6 +154,12 @@ void input_setup() {
   pinMode(FOOTSW_BUTTON_1, INPUT);
   pinMode(FOOTSW_BUTTON_2, INPUT);
   pinMode(FOOTSW_POT_SW, INPUT);
+
+  noInterrupts();
+  PCMSK2 |= (1 << PCINT20);
+  PCMSK2 |= (1 << PCINT21);
+  PCICR  |= (1 << PCIE2);
+  interrupts();
 }
 
 void radio_setup() {
@@ -211,17 +227,27 @@ bool sendmsg(const char *msg, size_t sz) {
   else return true;
 }
 
+void deep_sleep() {
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  cli();
+
+  /* Shut down display before going to sleep */
+  digitalWrite(led_mplex_pins[0], LOW);
+  digitalWrite(led_mplex_pins[1], LOW);
+
+  sleep_enable();
+  sleep_bod_disable();
+  sei();
+  sleep_cpu(); /* Guaranteed to execute before any interrupts */
+  sleep_disable();
+}
+
 void loop() {
   const char msg1[] = "\xB0\x1f\x01";
   const char msg2[] = "\xB0\x1f\x21";
   const char msg3[] = "\xB0\x1f\x41";
   const char msg4[] = "\xB0\x1f\x61";
 
-  for (size_t i = 0; i < 100; i++) {
-    noInterrupts();
-    led_buffer[0] = led_numbers[i/10];
-    led_buffer[1] = led_numbers[i%10];
-    interrupts();
-    delay(100);
-  }
+  delay(1000);
+  deep_sleep();
 }
