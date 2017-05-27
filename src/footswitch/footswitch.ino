@@ -75,9 +75,16 @@ const char led_mplex_pins[] = {10, 9};
 #define FOOTSW_BUTTON_1 4
 #define FOOTSW_BUTTON_2 5
 
-/* Potentiometer pins */
+/* Potentiometer setup */
 #define FOOTSW_POT_SW 8
 #define FOOTSW_POT_ADC A7
+#define FOOTSW_POT_LOWPASS_ALPHA 0.99
+#define FOOTSW_POT_DEADZONE 2
+
+/* Button state. Bits raised from the interrupt handler */
+volatile uint8_t button_state = 0x00;
+#define BTN1_STATE_BIT 0x01
+#define BTN2_STATE_BIT 0x02
 
 void halt(const char *msg) {
   Serial.println(msg);
@@ -141,12 +148,10 @@ void display_setup() {
 
 ISR(PCINT2_vect) {
   if (digitalRead(FOOTSW_BUTTON_1))
-    led_buffer[0] = led_numbers[1];
+    button_state |= BTN1_STATE_BIT;
 
   else if(digitalRead(FOOTSW_BUTTON_2))
-    led_buffer[0] = led_numbers[2];
-
-  else led_buffer[0] = led_numbers[0];
+    button_state |= BTN2_STATE_BIT;
 }
 
 void input_setup() {
@@ -203,7 +208,7 @@ void setup() {
  *  +-------------+-------------------------------+----------------+
  *  | Payload len |      Payload + padding        |      CRC16     |
  *  +-------------+-------------------------------+----------------+
- *       1 byte       NRF24_PAYLOAD_SZ - 3 bytes         2 bytes
+ *      1 byte       NRF24_PAYLOAD_SZ - 3 bytes         2 bytes
  *
  */
 bool sendmsg(const char *msg, size_t sz) {
@@ -234,6 +239,7 @@ void deep_sleep() {
   /* Shut down display before going to sleep */
   digitalWrite(led_mplex_pins[0], LOW);
   digitalWrite(led_mplex_pins[1], LOW);
+  led_buffer[0] = led_buffer[1] = 0x00;
 
   sleep_enable();
   sleep_bod_disable();
@@ -242,12 +248,55 @@ void deep_sleep() {
   sleep_disable();
 }
 
+void btn1_pressed() {
+}
+
+void btn2_pressed() {
+}
+
+void read_potentiometer() {
+  static float filtered = 0.0;
+
+  int ain = analogRead(FOOTSW_POT_ADC);
+
+  /* Map result to [0, 100] */
+  float new_val = 100.0 * (float)ain / 1023.0;
+
+  /* Lowpass filtering */
+  filtered = FOOTSW_POT_LOWPASS_ALPHA * filtered +
+             (1.0 - FOOTSW_POT_LOWPASS_ALPHA) * new_val;
+
+  /* Add some dead zone */
+  int val = map(filtered, 0, 100, -FOOTSW_POT_DEADZONE,
+                100 + FOOTSW_POT_DEADZONE);
+  if (val < 0) val = 0;
+  else if (val > 99) val = 99;
+
+  noInterrupts();
+  led_buffer[0] = led_numbers[val / 10];
+  led_buffer[1] = led_numbers[val % 10];
+  interrupts();
+}
+
 void loop() {
   const char msg1[] = "\xB0\x1f\x01";
   const char msg2[] = "\xB0\x1f\x21";
   const char msg3[] = "\xB0\x1f\x41";
   const char msg4[] = "\xB0\x1f\x61";
 
-  delay(1000);
-  deep_sleep();
+  unsigned long start = millis();
+
+  while (millis() - start < 2000) {
+    noInterrupts();
+    uint8_t cur_state = button_state;
+    button_state = 0x00;
+    interrupts();
+
+    if      (button_state & BTN1_STATE_BIT) btn1_pressed();
+    else if (button_state & BTN2_STATE_BIT) btn2_pressed();
+
+    read_potentiometer();
+  }
+
+  //deep_sleep();
 }
