@@ -41,6 +41,7 @@ const uint64_t nrf24_footswitch_txpipe = 0x0731e80038efeede;
 #define NRF24_PA            RF24_PA_MAX
 #define NRF24_RATE          RF24_250KBPS
 #define NRF24_PAYLOAD_SZ    8
+#define NRF24_RETRIES       5
 #define CRC_LEN             2
 
 /* LED segment pins */
@@ -87,7 +88,7 @@ volatile int cur_digit = 0;
 #define FOOTSW_POT_LOWPASS_ALPHA  0.98
 #define FOOTSW_POT_DEADZONE       2
 #define FOOTSW_POT_MIN_CHANGE     0.4
-#define FOOTSW_POT_CONVERGE_TICKS 200
+#define FOOTSW_POT_CONVERGE_TICKS 300
 
 /* How many updates to wait until potentiometer reading is reliable */
 unsigned long footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
@@ -311,7 +312,12 @@ bool sendmsg(const unsigned char *msg, size_t sz) {
 
   memcpy(msg_out+(NRF24_PAYLOAD_SZ - CRC_LEN), &crc, CRC_LEN);
 
-  if (!nrf24.write(msg_out, NRF24_PAYLOAD_SZ)){
+  size_t attempts;
+  for (attempts = 0; attempts < NRF24_RETRIES; attempts++)
+    if (nrf24.write(msg_out, NRF24_PAYLOAD_SZ))
+      break;
+
+  if (attempts == NRF24_RETRIES) {
     Serial.println("Failed to send/receive ACK");
     noInterrupts();
     radio_tx_fail_ticks = RADIO_TX_FAIL_DURATION;
@@ -456,26 +462,21 @@ void preset_display_mode() {
 
 void radio_tx_fail_mode() {
   /* Show fail animation */
-  if (millis() % 500 > 250) {
+  OCR1A = OCR1B = 0xFF;
+
+  noInterrupts();
+  if (radio_tx_fail_ticks % 160 > 80) {
     txfail_buf[0] = 0x79; /* E */
     txfail_buf[1] = 0x50; /* r */
   }
 
   else txfail_buf[0] = txfail_buf[1] = 0x00;
 
-  OCR1A = OCR1B = 0xFF;
-
-  noInterrupts();
   led_buffer = txfail_buf;
   interrupts();
 }
 
 void loop() {
-  const char msg1[] = "\xB0\x1f\x01";
-  const char msg2[] = "\xB0\x1f\x21";
-  const char msg3[] = "\xB0\x1f\x41";
-  const char msg4[] = "\xB0\x1f\x61";
-
   while (millis() - last_activity_time < IDLE_ON_TIME) {
     /* Read button events and timers */
     noInterrupts();
