@@ -81,16 +81,17 @@ volatile int cur_digit = 0;
 #define FOOTSW_BUTTON_2 5
 
 /* Potentiometer setup */
-#define FOOTSW_POT_SW 8
-#define FOOTSW_POT_ADC A7
-#define FOOTSW_POT_LOWPASS_ALPHA 0.98
-#define FOOTSW_POT_DEADZONE 2
-#define FOOTSW_POT_MIN_CHANGE 0.4
+#define FOOTSW_POT_SW             8
+#define FOOTSW_POT_ADC            A7
+#define FOOTSW_POT_LOWPASS_ALPHA  0.98
+#define FOOTSW_POT_DEADZONE       2
+#define FOOTSW_POT_MIN_CHANGE     0.4
 
 /* Button state. Bits raised from the interrupt handler */
 volatile uint8_t button_state = 0x00;
-#define BTN1_STATE_BIT 0x01
-#define BTN2_STATE_BIT 0x02
+#define BTN1_STATE_BIT   0x01
+#define BTN2_STATE_BIT   0x02
+#define POT_SW_STATE_BIT 0x04
 
 /* Time to stay awake when there is no user activity (ms) */
 #define IDLE_ON_TIME 10000
@@ -165,13 +166,16 @@ void display_setup() {
   interrupts();
 }
 
-ISR(PCINT0_vect) {}
+ISR(PCINT0_vect) {
+  if (digitalRead(FOOTSW_POT_SW))
+    button_state |= POT_SW_STATE_BIT;
+}
 
 ISR(PCINT2_vect) {
   if (digitalRead(FOOTSW_BUTTON_1))
     button_state |= BTN1_STATE_BIT;
 
-  else if(digitalRead(FOOTSW_BUTTON_2))
+  if (digitalRead(FOOTSW_BUTTON_2))
     button_state |= BTN2_STATE_BIT;
 }
 
@@ -277,7 +281,7 @@ void btn1_pressed() {
 void btn2_pressed() {
 }
 
-void read_potentiometer() {
+void potentiometer_mode() {
   static float filtered = 0.0;
   static float filtered_noflap = 0.0;
 
@@ -303,6 +307,7 @@ void read_potentiometer() {
   /* Update led intensity */
   OCR1A = OCR1B = 255 * (1.0 + sin(millis()/70.0))/2.0;
 
+  /* Update LED display buffer */
   noInterrupts();
   pot_buf[0] = led_numbers[val / 10];
   pot_buf[1] = led_numbers[val % 10];
@@ -317,29 +322,31 @@ void loop() {
   const char msg4[] = "\xB0\x1f\x61";
 
   while (millis() - last_activity_time < IDLE_ON_TIME) {
-    /* Potentiometer mode? */
-    if (digitalRead(FOOTSW_POT_SW)) {
-      read_potentiometer();
-      last_activity_time = millis(); /* Never go to sleep in pot control mode */
-    }
+    /* Get button events */
+    noInterrupts();
+    uint8_t cur_state = button_state;
+    button_state = 0x00;
+    interrupts();
+    if (cur_state) last_activity_time = millis();
+
+    /* Potentiometer display mode? */
+    if (digitalRead(FOOTSW_POT_SW))
+      potentiometer_mode();
 
     /* Preset display mode */
     else {
       /* Set LEDs to maximum intensity */
       OCR1A = OCR1B = 255;
 
+      /* Show preset display buffer */
       noInterrupts();
-      uint8_t cur_state = button_state;
-      button_state = 0x00;
       led_buffer = preset_buf;
       interrupts();
-
-      if (cur_state) last_activity_time = millis();
-
-      if      (cur_state & BTN1_STATE_BIT) btn1_pressed();
-      else if (cur_state & BTN2_STATE_BIT) btn2_pressed();
     }
 
+    /* Unconditionally handle button events */
+    if      (cur_state & BTN1_STATE_BIT) btn1_pressed();
+    else if (cur_state & BTN2_STATE_BIT) btn2_pressed();
   }
 
   deep_sleep();
