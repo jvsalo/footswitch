@@ -87,7 +87,7 @@ volatile int cur_digit = 0;
 #define FOOTSW_POT_ADC            A7
 #define FOOTSW_POT_LOWPASS_ALPHA  0.98
 #define FOOTSW_POT_DEADZONE       2
-#define FOOTSW_POT_MIN_CHANGE     0.4
+#define FOOTSW_POT_MIN_CHANGE     0.6
 #define FOOTSW_POT_CONVERGE_TICKS 300
 
 /* How many updates to wait until potentiometer reading is reliable */
@@ -363,9 +363,9 @@ bool try_volume_update(uint8_t volume) {
 void potentiometer_mode() {
   static float filtered = 0.0;
   static float filtered_noflap = 0.0;
+  static unsigned int prev_volume = 0;
 
   int ain = analogRead(FOOTSW_POT_ADC);
-  bool activity = false;
 
   /* Map result to [0, 127] */
   float new_val = 127.0 * (float)ain / 1023.0;
@@ -375,26 +375,27 @@ void potentiometer_mode() {
              (1.0 - FOOTSW_POT_LOWPASS_ALPHA) * new_val;
 
   /* Prevent flapping by requiring minimum change */
-  if (fabs(filtered - filtered_noflap) > FOOTSW_POT_MIN_CHANGE) {
+  if (fabs(filtered - filtered_noflap) > FOOTSW_POT_MIN_CHANGE)
     filtered_noflap = filtered;
-    activity = true;
-  }
 
   /* Add some dead zone */
-  int val = map(filtered_noflap*10.0, 0, 1270, -FOOTSW_POT_DEADZONE*10,
+  int vol = map(filtered_noflap*10.0, 0, 1270, -FOOTSW_POT_DEADZONE*10,
                 1270 + FOOTSW_POT_DEADZONE*10);
-  if (val < 0) val = 0;
-  else if (val > 1270) val = 1270;
-  val /= 10;
+  if (vol < 0) vol = 0;
+  else if (vol > 1270) vol = 1270;
+  vol /= 10;
 
   /* Convergence ongoing? */
   if (footsw_pot_converge_left) {
     footsw_pot_converge_left--;
 
     /* Converge just finished? Send initial update */
-    if (!footsw_pot_converge_left)
-      if (!try_volume_update(val))
+    if (!footsw_pot_converge_left) {
+      if (!try_volume_update(vol))
         footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
+
+      prev_volume = vol;
+    }
   }
 
   else {
@@ -403,20 +404,26 @@ void potentiometer_mode() {
 
     /* Update LED display buffer */
     noInterrupts();
-    pot_buf[0] = led_numbers[map(val,0,127,0,99) / 10];
-    pot_buf[1] = led_numbers[map(val,0,127,0,99) % 10];
+    pot_buf[0] = led_numbers[map(vol,0,127,0,99) / 10];
+    pot_buf[1] = led_numbers[map(vol,0,127,0,99) % 10];
     led_buffer = pot_buf;
     interrupts();
   }
 
-  if (activity) {
+  if (vol != prev_volume) {
+    /* Prevent too frequent updates */
+    if (millis() - last_activity_time < 100)
+      return;
+
     /* Activity detected, prevent sleep */
     last_activity_time = millis();
 
     /* Send update if converge has finished */
     if (!footsw_pot_converge_left)
-      if (!try_volume_update(val))
+      if (!try_volume_update(vol))
         footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
+
+    prev_volume = vol;
   }
 }
 
