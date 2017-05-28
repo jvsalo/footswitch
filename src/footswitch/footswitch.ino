@@ -93,6 +93,11 @@ volatile uint8_t button_state = 0x00;
 #define BTN2_STATE_BIT   0x02
 #define POT_SW_STATE_BIT 0x04
 
+/* Button debounce timer (Timer2 ticks, 488 Hz) */
+#define BTN_DEBOUNCE_TICKS 20
+unsigned int btn1_debounce_ticks = 0;
+unsigned int btn2_debounce_ticks = 0;
+
 /* Time to stay awake when there is no user activity (ms) */
 #define IDLE_ON_TIME 10000
 
@@ -133,6 +138,10 @@ ISR(TIMER2_OVF_vect) {
   /* Drive one of the displays */
   if (cur_digit) TCCR1A |= (1 << COM1A1);
   else           TCCR1A |= (1 << COM1B1);
+
+  /* Update button debounce timers */
+  if (btn1_debounce_ticks) btn1_debounce_ticks--;
+  if (btn2_debounce_ticks) btn2_debounce_ticks--;
 }
 
 void display_setup() {
@@ -170,15 +179,49 @@ void display_setup() {
 }
 
 ISR(PCINT0_vect) {
-  if (digitalRead(FOOTSW_POT_SW))
-    button_state |= POT_SW_STATE_BIT;
+  /* We don't care about what happened, just that something happened */
+  button_state |= POT_SW_STATE_BIT;
+}
+
+bool btn_read_debounce(unsigned int  *debounce_ticks,
+                       uint8_t       *oldstate,
+                       uint8_t        pin)
+{
+  bool pressed = false;
+
+  if (digitalRead(pin)) {
+    if (!(*oldstate)) {
+      /* State changed - debounce time passed? */
+      if (!(*debounce_ticks))
+        pressed = true;
+
+      /* Reset debounce timer on every state change */
+      *debounce_ticks = BTN_DEBOUNCE_TICKS;
+    }
+
+    *oldstate = 1;
+  }
+
+  else {
+    if (*oldstate) {
+      /* Reset debounce timer on every state change */
+      *debounce_ticks = BTN_DEBOUNCE_TICKS;
+    }
+
+    *oldstate = 0;
+  }
+
+  return pressed;
 }
 
 ISR(PCINT2_vect) {
-  if (digitalRead(FOOTSW_BUTTON_1))
+  static uint8_t btn1_state = 0;
+  static uint8_t btn2_state = 0;
+
+  if (btn_read_debounce(&btn1_debounce_ticks, &btn1_state, FOOTSW_BUTTON_1))
     button_state |= BTN1_STATE_BIT;
 
-  if (digitalRead(FOOTSW_BUTTON_2))
+  if (btn_read_debounce(&btn2_debounce_ticks, &btn2_state, FOOTSW_BUTTON_2))
     button_state |= BTN2_STATE_BIT;
 }
 
@@ -274,6 +317,10 @@ void deep_sleep() {
   TCCR1A &= ~(1 << COM1B1);
   preset_buf[0] = preset_buf[1] = 0x00;
 
+  /* Reset debounce timers */
+  btn1_debounce_ticks = 0;
+  btn2_debounce_ticks = 0;
+
   sleep_enable();
   sleep_bod_disable();
   sei();
@@ -295,8 +342,12 @@ void potentiometer_mode() {
              (1.0 - FOOTSW_POT_LOWPASS_ALPHA) * new_val;
 
   /* Prevent flapping by requiring minimum change */
-  if (fabs(filtered - filtered_noflap) > FOOTSW_POT_MIN_CHANGE)
+  if (fabs(filtered - filtered_noflap) > FOOTSW_POT_MIN_CHANGE) {
     filtered_noflap = filtered;
+
+    /* Activity detected, so prevent sleep */
+    last_activity_time = millis();
+  }
 
   /* Add some dead zone */
   int val = map(filtered_noflap, 0, 100, -FOOTSW_POT_DEADZONE,
