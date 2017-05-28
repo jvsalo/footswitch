@@ -329,13 +329,19 @@ bool sendmsg(const unsigned char *msg, size_t sz) {
 }
 
 void deep_sleep() {
+  nrf24.powerDown();
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   cli();
 
   /* Re-check sleep condition to avoid race */
-  if (button_state) return;
+  if (button_state) {
+    sei();
+    nrf24.powerUp();
+    return;
+  }
 
-  nrf24.powerDown();
+  /* Shut down ADC */
+  ADCSRA &= ~(1 << ADEN);
 
   /* Shut down display before going to sleep */
   TCCR1A &= ~(1 << COM1A1);
@@ -355,7 +361,9 @@ void deep_sleep() {
   sleep_cpu(); /* Guaranteed to execute before any interrupts */
   sleep_disable();
 
+  /* Power up radio and ADC */
   nrf24.powerUp();
+  ADCSRA |= (1 << ADEN);
 }
 
 bool try_volume_update(uint8_t volume) {
