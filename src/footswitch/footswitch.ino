@@ -64,6 +64,7 @@ const char led_segments[] = {A1, A2, A3, A4, A5, 6, 7};
 /* LED display buffers for multiplex driver, one bit per segment. */
 volatile uint8_t preset_buf[2] = {0}; /* Preset display buffer */
 volatile uint8_t pot_buf[2]    = {0}; /* Potentiometer display buffer */
+volatile uint8_t txfail_buf[2] = {0}; /* TX fail animation display buffer */
 volatile uint8_t *led_buffer = preset_buf;
 
 /* Numbers from 0 to 9 */
@@ -94,7 +95,7 @@ volatile uint8_t button_state = 0x00;
 #define POT_SW_STATE_BIT 0x04
 
 /* Button debounce timer (Timer2 ticks, 488 Hz) */
-#define BTN_DEBOUNCE_TICKS 20
+#define BTN_DEBOUNCE_DURATION 20
 unsigned int btn1_debounce_ticks = 0;
 unsigned int btn2_debounce_ticks = 0;
 
@@ -106,6 +107,10 @@ unsigned long last_activity_time = 0;
 
 /* Current preset */
 uint8_t preset = 0;
+
+/* Radio TX fail animation timer (Timer2 ticks, 488 Hz) */
+#define RADIO_TX_FAIL_DURATION 1000
+unsigned int radio_tx_fail_ticks = 0;
 
 void halt(const char *msg) {
   Serial.println(msg);
@@ -142,6 +147,9 @@ ISR(TIMER2_OVF_vect) {
   /* Update button debounce timers */
   if (btn1_debounce_ticks) btn1_debounce_ticks--;
   if (btn2_debounce_ticks) btn2_debounce_ticks--;
+
+  /* Update radio TX fail animation timer */
+  if (radio_tx_fail_ticks) radio_tx_fail_ticks--;
 }
 
 void display_setup() {
@@ -178,6 +186,7 @@ void display_setup() {
   interrupts();
 }
 
+/* Potentiometer switch interrupt */
 ISR(PCINT0_vect) {
   /* We don't care about what happened, just that something happened */
   button_state |= POT_SW_STATE_BIT;
@@ -196,7 +205,7 @@ bool btn_read_debounce(unsigned int  *debounce_ticks,
         pressed = true;
 
       /* Reset debounce timer on every state change */
-      *debounce_ticks = BTN_DEBOUNCE_TICKS;
+      *debounce_ticks = BTN_DEBOUNCE_DURATION;
     }
 
     *oldstate = 1;
@@ -205,7 +214,7 @@ bool btn_read_debounce(unsigned int  *debounce_ticks,
   else {
     if (*oldstate) {
       /* Reset debounce timer on every state change */
-      *debounce_ticks = BTN_DEBOUNCE_TICKS;
+      *debounce_ticks = BTN_DEBOUNCE_DURATION;
     }
 
     *oldstate = 0;
@@ -214,6 +223,7 @@ bool btn_read_debounce(unsigned int  *debounce_ticks,
   return pressed;
 }
 
+/* Footswitch button interrupt */
 ISR(PCINT2_vect) {
   static uint8_t btn1_state = 0;
   static uint8_t btn2_state = 0;
@@ -321,6 +331,9 @@ void deep_sleep() {
   btn1_debounce_ticks = 0;
   btn2_debounce_ticks = 0;
 
+  /* End radio TX fail animation */
+  radio_tx_fail_ticks = 0;
+
   sleep_enable();
   sleep_bod_disable();
   sei();
@@ -377,6 +390,10 @@ void update_preset_display() {
 void btn1_pressed() {
   if (preset > 0) preset--;
   update_preset_display();
+
+  noInterrupts();
+  radio_tx_fail_ticks = RADIO_TX_FAIL_DURATION;
+  interrupts();
 }
 
 void btn2_pressed() {
@@ -397,6 +414,20 @@ void preset_display_mode() {
   interrupts();
 }
 
+void radio_tx_fail_mode() {
+  /* Show fail animation */
+  if (millis() % 500 > 250) {
+    txfail_buf[0] = 0x79; /* E */
+    txfail_buf[1] = 0x50; /* r */
+  }
+
+  else txfail_buf[0] = txfail_buf[1] = 0x00;
+
+  noInterrupts();
+  led_buffer = txfail_buf;
+  interrupts();
+}
+
 void loop() {
   const char msg1[] = "\xB0\x1f\x01";
   const char msg2[] = "\xB0\x1f\x21";
@@ -404,12 +435,19 @@ void loop() {
   const char msg4[] = "\xB0\x1f\x61";
 
   while (millis() - last_activity_time < IDLE_ON_TIME) {
-    /* Get button events */
+    /* Read button events and timers */
     noInterrupts();
     uint8_t cur_state = button_state;
+    unsigned int txfail_ticks = radio_tx_fail_ticks;
     button_state = 0x00;
     interrupts();
     if (cur_state) last_activity_time = millis();
+
+    /* If radio TX had failed, display fail animation */
+    if (radio_tx_fail_ticks) {
+      radio_tx_fail_mode();
+      continue;
+    }
 
     /* Potentiometer display mode*/
     if (digitalRead(FOOTSW_POT_SW))
