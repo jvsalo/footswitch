@@ -335,6 +335,8 @@ void deep_sleep() {
   /* Re-check sleep condition to avoid race */
   if (button_state) return;
 
+  nrf24.powerDown();
+
   /* Shut down display before going to sleep */
   TCCR1A &= ~(1 << COM1A1);
   TCCR1A &= ~(1 << COM1B1);
@@ -352,6 +354,8 @@ void deep_sleep() {
   sei();
   sleep_cpu(); /* Guaranteed to execute before any interrupts */
   sleep_disable();
+
+  nrf24.powerUp();
 }
 
 bool try_volume_update(uint8_t volume) {
