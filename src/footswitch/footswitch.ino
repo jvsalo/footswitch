@@ -87,6 +87,10 @@ volatile int cur_digit = 0;
 #define FOOTSW_POT_LOWPASS_ALPHA  0.98
 #define FOOTSW_POT_DEADZONE       2
 #define FOOTSW_POT_MIN_CHANGE     0.4
+#define FOOTSW_POT_CONVERGE_TICKS 200
+
+/* How many updates to wait until potentiometer reading is reliable */
+unsigned long footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
 
 /* Button state. Bits raised from the interrupt handler */
 volatile uint8_t button_state = 0x00;
@@ -294,7 +298,7 @@ void setup() {
  *      1 byte       NRF24_PAYLOAD_SZ - 3 bytes         2 bytes
  *
  */
-bool sendmsg(const char *msg, size_t sz) {
+bool sendmsg(const unsigned char *msg, size_t sz) {
   char msg_out[NRF24_PAYLOAD_SZ] = {0};
 
   msg_out[0] = sz;
@@ -309,6 +313,9 @@ bool sendmsg(const char *msg, size_t sz) {
 
   if (!nrf24.write(msg_out, NRF24_PAYLOAD_SZ)){
     Serial.println("Failed to send/receive ACK");
+    noInterrupts();
+    radio_tx_fail_ticks = RADIO_TX_FAIL_DURATION;
+    interrupts();
     return false;
   }
 
@@ -341,11 +348,18 @@ void deep_sleep() {
   sleep_disable();
 }
 
+bool try_volume_update(uint8_t volume) {
+  unsigned char msg[] = "\xB0\x07\x00";
+  msg[2] = volume;
+  return sendmsg(msg, 3);
+}
+
 void potentiometer_mode() {
   static float filtered = 0.0;
   static float filtered_noflap = 0.0;
 
   int ain = analogRead(FOOTSW_POT_ADC);
+  bool activity = false;
 
   /* Map result to [0, 100] */
   float new_val = 100.0 * (float)ain / 1023.0;
@@ -357,9 +371,7 @@ void potentiometer_mode() {
   /* Prevent flapping by requiring minimum change */
   if (fabs(filtered - filtered_noflap) > FOOTSW_POT_MIN_CHANGE) {
     filtered_noflap = filtered;
-
-    /* Activity detected, so prevent sleep */
-    last_activity_time = millis();
+    activity = true;
   }
 
   /* Add some dead zone */
@@ -369,15 +381,37 @@ void potentiometer_mode() {
   else if (val > 999) val = 999;
   val /= 10;
 
-  /* Update led intensity */
-  OCR1A = OCR1B = 255 * (1.0 + sin(millis()/70.0))/2.0;
+  /* Convergence ongoing? */
+  if (footsw_pot_converge_left) {
+    footsw_pot_converge_left--;
 
-  /* Update LED display buffer */
-  noInterrupts();
-  pot_buf[0] = led_numbers[val / 10];
-  pot_buf[1] = led_numbers[val % 10];
-  led_buffer = pot_buf;
-  interrupts();
+    /* Converge just finished? Send initial update */
+    if (!footsw_pot_converge_left)
+      if (!try_volume_update(map(val, 0, 100, 0, 127)))
+        footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
+  }
+
+  else {
+    /* Update led intensity */
+    OCR1A = OCR1B = 255 * (1.0 + sin(millis()/70.0))/2.0;
+
+    /* Update LED display buffer */
+    noInterrupts();
+    pot_buf[0] = led_numbers[val / 10];
+    pot_buf[1] = led_numbers[val % 10];
+    led_buffer = pot_buf;
+    interrupts();
+  }
+
+  if (activity) {
+    /* Activity detected, prevent sleep */
+    last_activity_time = millis();
+
+    /* Send update if converge has finished */
+    if (!footsw_pot_converge_left)
+      if (!try_volume_update(map(val, 0, 100, 0, 127)))
+        footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
+  }
 }
 
 void update_preset_display() {
@@ -387,18 +421,24 @@ void update_preset_display() {
   interrupts();
 }
 
+bool try_program_change(uint8_t prog) {
+  unsigned char msg[] = "\xC0\x00";
+  msg[1] = prog;
+  return sendmsg(msg, 2);
+}
+
 void btn1_pressed() {
   if (preset > 0) preset--;
-  update_preset_display();
 
-  noInterrupts();
-  radio_tx_fail_ticks = RADIO_TX_FAIL_DURATION;
-  interrupts();
+  if (try_program_change(preset))
+    update_preset_display();
 }
 
 void btn2_pressed() {
-  if (preset < 9)  preset++;
-  update_preset_display();
+  if (preset < 9) preset++;
+
+  if (try_program_change(preset))
+    update_preset_display();
 }
 
 void preset_display_mode() {
@@ -423,6 +463,8 @@ void radio_tx_fail_mode() {
 
   else txfail_buf[0] = txfail_buf[1] = 0x00;
 
+  OCR1A = OCR1B = 0xFF;
+
   noInterrupts();
   led_buffer = txfail_buf;
   interrupts();
@@ -441,7 +483,12 @@ void loop() {
     unsigned int txfail_ticks = radio_tx_fail_ticks;
     button_state = 0x00;
     interrupts();
+
     if (cur_state) last_activity_time = millis();
+
+    /* If potentiometer switch is operated, reset convergence status */
+    if (cur_state & POT_SW_STATE_BIT)
+      footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
 
     /* If radio TX had failed, display fail animation */
     if (radio_tx_fail_ticks) {
