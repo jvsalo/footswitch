@@ -71,7 +71,10 @@ const uint8_t led_numbers[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,
                                0xFF, 0xEF};
 
 /* LED multiplex digit select pins (FET driver) */
-const char led_mplex_pins[] = {10, 9};
+const char led_mplex_pins[] = {10 /* OC1B */, 9 /* OC1A */};
+
+/* LED multiplexer current displayed digit */
+volatile int cur_digit = 0;
 
 /* Footswitch button pins */
 #define FOOTSW_BUTTON_1 4
@@ -111,12 +114,10 @@ void halt(const char *msg) {
 }
 
 /* Multiplex driver timer interrupt */
-ISR(TIMER1_COMPA_vect) {
-  /* Current enabled digit */
-  static int cur_digit = 0;
-
+ISR(TIMER2_OVF_vect) {
   /* Turn off all drive */
-  digitalWrite(led_mplex_pins[cur_digit], LOW);
+  TCCR1A &= ~(1 << COM1A1);
+  TCCR1A &= ~(1 << COM1B1);
 
   /* Switch digit */
   cur_digit = !cur_digit;
@@ -125,9 +126,10 @@ ISR(TIMER1_COMPA_vect) {
   for (size_t i = 0; i < 7; i++)
     digitalWrite(led_segments[i], led_buffer[cur_digit] & (1 << i));
 
-  /* Turn on drive */
-  digitalWrite(led_mplex_pins[cur_digit], HIGH);
+  if (cur_digit) TCCR1A |= (1 << COM1A1);
+  else           TCCR1A |= (1 << COM1B1);
 }
+
 
 void display_setup() {
   /* Initialize LED multiplexer, shut down display */
@@ -143,15 +145,23 @@ void display_setup() {
     digitalWrite(led_segments[i], LOW);
   }
 
-  /* Setup Timer1 to generate multiplex interrupts */
   noInterrupts();
-  TCCR1A = 0;               /* Zero TC1 control registers */
+
+  /* Setup Timer2 to generate multiplex interrupts */
+  TCCR2A = 0;                              /* Zero TC2 control registers */
+  TCCR2B = 0;
+  TCNT2 = 0;                               /* Initialize counter value */
+  TCCR2B |= (1 << CS22);                   /* 1/64 prescaler, 488 Hz */
+  TIMSK2 |= (1 << TOIE2);                  /* Enable overflow interrupt */
+
+  /* Setup Timer1 to generate intensity control PWM */
+  TCCR1A = 0;                              /* Zero TC1 control registers */
   TCCR1B = 0;
-  TCNT1  = 0;               /* Initialize counter value */
-  OCR1A = 16000;            /* At 8MHz, yields 500 Hz */
-  TCCR1B |= (1 << WGM12);   /* Clear Timer on Compare match (CTC) mode */
-  TCCR1B |= (1 << CS10);    /* No prescaler */
-  TIMSK1 |= (1 << OCIE1A);  /* Enable compare match interrupt */
+  TCCR1A |= (1 << WGM10) | (1 << WGM12);   /* Fast PWM 8 bit mode, 31.25 kHz */
+  TCNT1 = 0;                               /* Initialize counter value */
+  TCCR1B |= (1 << CS10);                   /* Prescaler off */
+  OCR1A = OCR1B = 255;                     /* Max. intensity */
+
   interrupts();
 }
 
@@ -172,11 +182,11 @@ void input_setup() {
   pinMode(FOOTSW_POT_SW, INPUT);
 
   noInterrupts();
-  PCMSK0 |= (1 << PCINT0);
-  PCMSK2 |= (1 << PCINT20);
-  PCMSK2 |= (1 << PCINT21);
-  PCICR  |= (1 << PCIE0);
-  PCICR  |= (1 << PCIE2);
+  PCMSK0 |= (1 << PCINT0);  /* Add PCINT0 to PCINT0 vector */
+  PCMSK2 |= (1 << PCINT20); /* Add PCINT20 to PCINT2 vector */
+  PCMSK2 |= (1 << PCINT21); /* Add PCINT21 to PCINT2 vector */
+  PCICR  |= (1 << PCIE0);   /* Enable PCINT0 interrupt */
+  PCICR  |= (1 << PCIE2);   /* Enable PCINT2 interrupt */
   interrupts();
 }
 
@@ -250,8 +260,8 @@ void deep_sleep() {
   cli();
 
   /* Shut down display before going to sleep */
-  digitalWrite(led_mplex_pins[0], LOW);
-  digitalWrite(led_mplex_pins[1], LOW);
+  TCCR1A &= ~(1 << COM1A1);
+  TCCR1A &= ~(1 << COM1B1);
   preset_buf[0] = preset_buf[1] = 0x00;
 
   sleep_enable();
@@ -290,16 +300,12 @@ void read_potentiometer() {
   if (val < 0) val = 0;
   else if (val > 99) val = 99;
 
+  /* Update led intensity */
+  OCR1A = OCR1B = 255 * (1.0 + sin(millis()/70.0))/2.0;
+
   noInterrupts();
-  /* Blink */
-  if (millis() % 300 > 150)
-    pot_buf[0] = pot_buf[1] = 0x00;
-
-  else {
-    pot_buf[0] = led_numbers[val / 10];
-    pot_buf[1] = led_numbers[val % 10];
-  }
-
+  pot_buf[0] = led_numbers[val / 10];
+  pot_buf[1] = led_numbers[val % 10];
   led_buffer = pot_buf;
   interrupts();
 }
@@ -317,8 +323,11 @@ void loop() {
       last_activity_time = millis(); /* Never go to sleep in pot control mode */
     }
 
-    /* Check buttons */
+    /* Preset display mode */
     else {
+      /* Set LEDs to maximum intensity */
+      OCR1A = OCR1B = 255;
+
       noInterrupts();
       uint8_t cur_state = button_state;
       button_state = 0x00;
@@ -330,6 +339,7 @@ void loop() {
       if      (cur_state & BTN1_STATE_BIT) btn1_pressed();
       else if (cur_state & BTN2_STATE_BIT) btn2_pressed();
     }
+
   }
 
   deep_sleep();
