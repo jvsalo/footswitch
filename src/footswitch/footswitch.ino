@@ -384,8 +384,11 @@ void btn2_pressed() {
 }
 
 void preset_display_mode() {
-  /* Set LEDs to maximum intensity */
-  OCR1A = OCR1B = 255;
+  /* Set LEDs to intensity based on remaining wake-up time */
+  int32_t remaining = IDLE_ON_TIME - (millis() - last_activity_time);
+  if (remaining < 0) remaining = 0;
+  if (remaining > 1000) OCR1A = OCR1B = 255;
+  else OCR1A = OCR1B = ((int32_t)255 * remaining) / (int32_t)1000;
 
   /* Show preset display buffer */
   noInterrupts();
