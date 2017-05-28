@@ -350,10 +350,11 @@ void potentiometer_mode() {
   }
 
   /* Add some dead zone */
-  int val = map(filtered_noflap, 0, 100, -FOOTSW_POT_DEADZONE,
-                100 + FOOTSW_POT_DEADZONE);
+  int val = map(filtered_noflap*10.0, 0, 1000, -FOOTSW_POT_DEADZONE*10,
+                1000 + FOOTSW_POT_DEADZONE*10);
   if (val < 0) val = 0;
-  else if (val > 99) val = 99;
+  else if (val > 999) val = 999;
+  val /= 10;
 
   /* Update led intensity */
   OCR1A = OCR1B = 255 * (1.0 + sin(millis()/70.0))/2.0;
