@@ -367,8 +367,8 @@ void potentiometer_mode() {
   int ain = analogRead(FOOTSW_POT_ADC);
   bool activity = false;
 
-  /* Map result to [0, 100] */
-  float new_val = 100.0 * (float)ain / 1023.0;
+  /* Map result to [0, 127] */
+  float new_val = 127.0 * (float)ain / 1023.0;
 
   /* Lowpass filtering */
   filtered = FOOTSW_POT_LOWPASS_ALPHA * filtered +
@@ -381,10 +381,10 @@ void potentiometer_mode() {
   }
 
   /* Add some dead zone */
-  int val = map(filtered_noflap*10.0, 0, 1000, -FOOTSW_POT_DEADZONE*10,
-                1000 + FOOTSW_POT_DEADZONE*10);
+  int val = map(filtered_noflap*10.0, 0, 1270, -FOOTSW_POT_DEADZONE*10,
+                1270 + FOOTSW_POT_DEADZONE*10);
   if (val < 0) val = 0;
-  else if (val > 999) val = 999;
+  else if (val > 1270) val = 1270;
   val /= 10;
 
   /* Convergence ongoing? */
@@ -393,7 +393,7 @@ void potentiometer_mode() {
 
     /* Converge just finished? Send initial update */
     if (!footsw_pot_converge_left)
-      if (!try_volume_update(map(val, 0, 100, 0, 127)))
+      if (!try_volume_update(val))
         footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
   }
 
@@ -403,8 +403,8 @@ void potentiometer_mode() {
 
     /* Update LED display buffer */
     noInterrupts();
-    pot_buf[0] = led_numbers[val / 10];
-    pot_buf[1] = led_numbers[val % 10];
+    pot_buf[0] = led_numbers[map(val,0,127,0,99) / 10];
+    pot_buf[1] = led_numbers[map(val,0,127,0,99) % 10];
     led_buffer = pot_buf;
     interrupts();
   }
@@ -415,7 +415,7 @@ void potentiometer_mode() {
 
     /* Send update if converge has finished */
     if (!footsw_pot_converge_left)
-      if (!try_volume_update(map(val, 0, 100, 0, 127)))
+      if (!try_volume_update(val))
         footsw_pot_converge_left = FOOTSW_POT_CONVERGE_TICKS;
   }
 }
