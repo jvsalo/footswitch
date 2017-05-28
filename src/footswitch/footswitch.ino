@@ -99,6 +99,9 @@ volatile uint8_t button_state = 0x00;
 /* Timestamp for last user activity */
 unsigned long last_activity_time = 0;
 
+/* Current preset */
+uint8_t preset = 0;
+
 void halt(const char *msg) {
   Serial.println(msg);
   while (1) {
@@ -127,10 +130,10 @@ ISR(TIMER2_OVF_vect) {
   for (size_t i = 0; i < 7; i++)
     digitalWrite(led_segments[i], led_buffer[cur_digit] & (1 << i));
 
+  /* Drive one of the displays */
   if (cur_digit) TCCR1A |= (1 << COM1A1);
   else           TCCR1A |= (1 << COM1B1);
 }
-
 
 void display_setup() {
   /* Initialize LED multiplexer, shut down display */
@@ -263,6 +266,9 @@ void deep_sleep() {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   cli();
 
+  /* Re-check sleep condition to avoid race */
+  if (button_state) return;
+
   /* Shut down display before going to sleep */
   TCCR1A &= ~(1 << COM1A1);
   TCCR1A &= ~(1 << COM1B1);
@@ -273,12 +279,6 @@ void deep_sleep() {
   sei();
   sleep_cpu(); /* Guaranteed to execute before any interrupts */
   sleep_disable();
-}
-
-void btn1_pressed() {
-}
-
-void btn2_pressed() {
 }
 
 void potentiometer_mode() {
@@ -315,6 +315,33 @@ void potentiometer_mode() {
   interrupts();
 }
 
+void update_preset_display() {
+  noInterrupts();
+  preset_buf[0] = 0x73; /* P */
+  preset_buf[1] = led_numbers[preset % 10];
+  interrupts();
+}
+
+void btn1_pressed() {
+  if (preset > 0) preset--;
+  update_preset_display();
+}
+
+void btn2_pressed() {
+  if (preset < 9)  preset++;
+  update_preset_display();
+}
+
+void preset_display_mode() {
+  /* Set LEDs to maximum intensity */
+  OCR1A = OCR1B = 255;
+
+  /* Show preset display buffer */
+  noInterrupts();
+  led_buffer = preset_buf;
+  interrupts();
+}
+
 void loop() {
   const char msg1[] = "\xB0\x1f\x01";
   const char msg2[] = "\xB0\x1f\x21";
@@ -329,22 +356,14 @@ void loop() {
     interrupts();
     if (cur_state) last_activity_time = millis();
 
-    /* Potentiometer display mode? */
+    /* Potentiometer display mode*/
     if (digitalRead(FOOTSW_POT_SW))
       potentiometer_mode();
 
     /* Preset display mode */
-    else {
-      /* Set LEDs to maximum intensity */
-      OCR1A = OCR1B = 255;
+    else preset_display_mode();
 
-      /* Show preset display buffer */
-      noInterrupts();
-      led_buffer = preset_buf;
-      interrupts();
-    }
-
-    /* Unconditionally handle button events */
+    /* Always handle button events */
     if      (cur_state & BTN1_STATE_BIT) btn1_pressed();
     else if (cur_state & BTN2_STATE_BIT) btn2_pressed();
   }
