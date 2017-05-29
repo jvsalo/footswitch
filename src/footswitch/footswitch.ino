@@ -117,8 +117,17 @@ uint8_t preset = 0;
 #define RADIO_TX_FAIL_DURATION 1000
 unsigned int radio_tx_fail_ticks = 0;
 
+/* Serial TX is used to drive potentiometer, use only for debug */
+/* #define SERIAL_DEBUG */
+
+void serial_msg(const String &msg) {
+  #ifdef SERIAL_DEBUG
+    serial_msg(msg);
+  #endif
+}
+
 void halt(const char *msg) {
-  Serial.println(msg);
+  serial_msg(msg);
   while (1) {
     noInterrupts();
     led_buffer[0] = led_buffer[1] = 0x00;
@@ -256,7 +265,7 @@ void input_setup() {
 }
 
 void radio_setup() {
-  Serial.println("Initializing radio module...");
+  serial_msg("Initializing radio module...");
   if (!nrf24.begin()) halt("Unable to initialize radio module");
 
   nrf24.setChannel(NRF24_CHANNEL);
@@ -273,19 +282,27 @@ void radio_setup() {
   if (nrf24.getPayloadSize() != NRF24_PAYLOAD_SZ)
     halt("Failed to set payload size");
 
-  Serial.println("Radio module initialized. Current settings:");
-  nrf24.printDetails();
+  serial_msg("Radio module initialized. Current settings:");
+
+  #ifdef SERIAL_DEBUG
+    nrf24.printDetails();
+  #endif
 }
 
 void setup() {
   display_setup();
   input_setup();
 
-  Serial.begin(38400);
-  printf_begin();
-
-  Serial.println("Footswitch version " FOOTSW_VER);
-  Serial.println("Jaakko Salo / jaakkos@gmail.com / 2017");
+  #ifdef SERIAL_DEBUG
+    Serial.begin(38400);
+    printf_begin();
+    serial_msg("Footswitch version " FOOTSW_VER);
+    serial_msg("Jaakko Salo / jaakkos@gmail.com / 2017");
+  #else
+    /* Use TX pin for potentiometer drive */
+    pinMode(1, OUTPUT);
+    digitalWrite(1, HIGH);
+  #endif
 
   radio_setup();
 }
@@ -318,7 +335,7 @@ bool sendmsg(const unsigned char *msg, size_t sz) {
       break;
 
   if (attempts == NRF24_RETRIES) {
-    Serial.println("Failed to send/receive ACK");
+    serial_msg("Failed to send/receive ACK");
     noInterrupts();
     radio_tx_fail_ticks = RADIO_TX_FAIL_DURATION;
     interrupts();
@@ -340,8 +357,12 @@ void deep_sleep() {
     return;
   }
 
-  /* Shut down ADC */
+  /* Power down ADC and potentiometer */
   ADCSRA &= ~(1 << ADEN);
+
+  #ifndef SERIAL_DEBUG
+    digitalWrite(1, LOW);
+  #endif
 
   /* Shut down display before going to sleep */
   TCCR1A &= ~(1 << COM1A1);
@@ -361,9 +382,15 @@ void deep_sleep() {
   sleep_cpu(); /* Guaranteed to execute before any interrupts */
   sleep_disable();
 
-  /* Power up radio and ADC */
+  /* Power up radio */
   nrf24.powerUp();
+
+  /* Power up ADC and potentiometer */
   ADCSRA |= (1 << ADEN);
+
+  #ifndef SERIAL_DEBUG
+    digitalWrite(1, HIGH);
+  #endif
 }
 
 bool try_volume_update(uint8_t volume) {
