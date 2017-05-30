@@ -79,8 +79,8 @@ const char led_mplex_pins[] = {10 /* OC1B */, 9 /* OC1A */};
 volatile int cur_digit = 0;
 
 /* Footswitch button pins */
-#define FOOTSW_BUTTON_1 4
-#define FOOTSW_BUTTON_2 5
+#define FOOTSW_BUTTON_1 5
+#define FOOTSW_BUTTON_2 4
 
 /* Potentiometer setup */
 #define FOOTSW_POT_SW             8
@@ -111,7 +111,7 @@ unsigned int btn2_debounce_ticks = 0;
 unsigned long last_activity_time = 0;
 
 /* Current preset */
-uint8_t preset = 0;
+uint8_t preset = 1;
 
 /* Radio TX fail animation timer (Timer2 ticks, 488 Hz) */
 #define RADIO_TX_FAIL_DURATION 1000
@@ -394,7 +394,7 @@ void deep_sleep() {
 }
 
 bool try_volume_update(uint8_t volume) {
-  unsigned char msg[] = "\xB0\x07\x00";
+  unsigned char msg[] = "\xB0\x39\x00";
   msg[2] = volume;
   return sendmsg(msg, 3);
 }
@@ -480,16 +480,16 @@ bool try_program_change(uint8_t prog) {
 }
 
 void btn1_pressed() {
-  if (preset > 0) preset--;
+  if (preset > 1) preset--;
 
-  if (try_program_change(preset))
+  if (try_program_change(preset-1))
     update_preset_display();
 }
 
 void btn2_pressed() {
   if (preset < 9) preset++;
 
-  if (try_program_change(preset))
+  if (try_program_change(preset-1))
     update_preset_display();
 }
 
