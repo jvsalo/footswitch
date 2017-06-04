@@ -101,8 +101,8 @@ volatile uint8_t button_state = 0x00;
 
 /* Button debounce timer (Timer2 ticks, 488 Hz) */
 #define BTN_DEBOUNCE_DURATION 20
-unsigned int btn1_debounce_ticks = 0;
-unsigned int btn2_debounce_ticks = 0;
+volatile unsigned int btn1_debounce_ticks = 0;
+volatile unsigned int btn2_debounce_ticks = 0;
 
 /* Time to stay awake when there is no user activity (ms) */
 #define IDLE_ON_TIME 10000
@@ -115,7 +115,7 @@ uint8_t preset = 1;
 
 /* Radio TX fail animation timer (Timer2 ticks, 488 Hz) */
 #define RADIO_TX_FAIL_DURATION 1000
-unsigned int radio_tx_fail_ticks = 0;
+volatile unsigned int radio_tx_fail_ticks = 0;
 
 /* Serial TX is used to drive potentiometer, use only for debug */
 /* #define SERIAL_DEBUG */
