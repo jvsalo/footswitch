@@ -122,7 +122,7 @@ volatile unsigned int radio_tx_fail_ticks = 0;
 
 void serial_msg(const String &msg) {
   #ifdef SERIAL_DEBUG
-    serial_msg(msg);
+    Serial.println(msg);
   #endif
 }
 
